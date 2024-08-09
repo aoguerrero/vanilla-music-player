@@ -88,6 +88,12 @@ THE SOFTWARE.
 	<string name="open">Open</string>
 	<string name="go_home">Home directory</string>
 	<string name="jumping_to_song">Song is already in queue, jumping…</string>
+	<string name="set_tags">Set tags from filename</string>
+	<string name="set_tags_success">Song tags updated</string>
+	<string name="set_tags_error1">Error updating the song tags</string>
+	<string name="set_tags_error2">Can\'t complete operation</string>
+
+
 
 	<!--
 		As a developer, you should always supply "one" and "other"

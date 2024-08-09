@@ -27,7 +27,9 @@ import ch.blinkenlights.android.medialibrary.MediaLibrary;
 import ch.blinkenlights.android.vanilla.ui.FancyMenu;
 import ch.blinkenlights.android.vanilla.ui.FancyMenuItem;
 import ch.blinkenlights.android.vanilla.ui.ArrowedText;
+import onl.andres.SongInfo;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -36,6 +38,8 @@ import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.media.MediaScannerConnection;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -50,7 +54,6 @@ import android.widget.CheckBox;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.SearchView;
 import android.widget.Toast;
 
@@ -59,6 +62,11 @@ import androidx.viewpager.widget.ViewPager;
 import java.io.File;
 
 import junit.framework.Assert;
+
+import org.jaudiotagger.audio.AudioFile;
+import org.jaudiotagger.audio.AudioFileIO;
+import org.jaudiotagger.tag.FieldKey;
+import org.jaudiotagger.tag.Tag;
 
 /**
  * The library activity where songs to play can be selected from the library.
@@ -121,6 +129,15 @@ public class LibraryActivity
 	/**
 	 * The SongTimeline add song modes corresponding to each relevant action.
 	 */
+
+	// Storage Permissions
+	private static final int REQUEST_EXTERNAL_STORAGE = 1;
+	private static String[] PERMISSIONS_STORAGE = {
+		Manifest.permission.MANAGE_EXTERNAL_STORAGE,
+		Manifest.permission.READ_EXTERNAL_STORAGE,
+		Manifest.permission.WRITE_EXTERNAL_STORAGE
+	};
+
 	private static final int[] modeForAction =
 		{ SongTimeline.MODE_PLAY, SongTimeline.MODE_ENQUEUE, -1,
 		  SongTimeline.MODE_PLAY_ID_FIRST, SongTimeline.MODE_ENQUEUE_ID_FIRST,
@@ -663,7 +680,7 @@ public class LibraryActivity
 	private static final int CTX_MENU_SHOW_DETAILS = 12;
 	private static final int CTX_MENU_ADD_TO_HOMESCREEN = 13;
 	private static final int CTX_MENU_ADD_TO_PLAYLIST = 14;
-
+	private static final int CTX_MENU_SET_TAGS = 15;
 	/**
 	 * Creates a context menu for an adapter row.
 	 *
@@ -721,6 +738,8 @@ public class LibraryActivity
 			}
 			fm.addSpacer(90);
 			fm.add(CTX_MENU_DELETE, 91, R.drawable.menu_delete, R.string.delete).setIntent(rowData);
+			/* #SET_TAGS */
+			fm.add(CTX_MENU_SET_TAGS, 1, R.drawable.menu_details, R.string.set_tags).setIntent(rowData);
 		}
 		fm.show(view, x, y);
 		return true;
@@ -840,6 +859,30 @@ public class LibraryActivity
 			long id = intent.getLongExtra(LibraryAdapter.DATA_ID, LibraryAdapter.INVALID_ID);
 			String label = intent.getStringExtra(LibraryAdapter.DATA_TITLE);
 			SystemUtils.installLauncherShortcut(this, label, type, id);
+			break;
+		}
+			/* #SET_TAGS */
+		case CTX_MENU_SET_TAGS: {
+			try {
+				String filename = intent != null ? intent.getStringExtra(LibraryAdapter.DATA_FILE) : null;
+				if (filename != null) {
+					File file = new File(filename);
+					AudioFile audioFile = AudioFileIO.read(file);
+					audioFile.delete();
+					Tag tag = audioFile.getTagOrCreateDefault();
+					SongInfo songInfo = new SongInfo(file);
+					tag.setField(FieldKey.ARTIST, songInfo.getArtist());
+					tag.setField(FieldKey.TITLE, songInfo.getTitle());
+					tag.setField(FieldKey.ALBUM, songInfo.getArtist());
+					audioFile.commit();
+					MediaScannerConnection.scanFile(getApplicationContext(), new String[]{filename}, null, null);
+					Toast.makeText(getApplicationContext(), R.string.set_tags_success, Toast.LENGTH_SHORT).show();
+				} else {
+					Toast.makeText(getApplicationContext(), R.string.set_tags_error2, Toast.LENGTH_SHORT).show();
+				}
+			} catch (Exception e) {
+				Toast.makeText(getApplicationContext(), R.string.set_tags_error1, Toast.LENGTH_SHORT).show();
+			}
 			break;
 		}
 		default:

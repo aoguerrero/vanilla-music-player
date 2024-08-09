@@ -150,7 +150,7 @@ public class PermissionRequestActivity extends Activity {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
 			return new String[] { Manifest.permission.READ_EXTERNAL_STORAGE };
 		}
-		return new String[] { Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE };
+		return new String[] { Manifest.permission.MANAGE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE };
 	}
 
 	private static String[] getOptionalPermissions() {
